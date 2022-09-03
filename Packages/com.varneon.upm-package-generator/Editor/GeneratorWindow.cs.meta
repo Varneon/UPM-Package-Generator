@@ -7,6 +7,7 @@ MonoImporter:
   - m_ViewDataDictionary: {instanceID: 0}
   - windowUxml: {fileID: 9197481963319205126, guid: 28fe2ff1804075f4684b0806178dd30e,
       type: 3}
+  - iconUnused: {fileID: 2800000, guid: 538d38e5df889ed489ff8476335e8e60, type: 3}
   - iconValid: {fileID: 2800000, guid: 64623fb7ee1eb79499ba31fc5bde0566, type: 3}
   - iconInvalid: {fileID: 2800000, guid: d32fc45a8887fb44aac5b95bb3d9788c, type: 3}
   executionOrder: 0

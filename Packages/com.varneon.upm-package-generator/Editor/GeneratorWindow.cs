@@ -3,6 +3,8 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static Varneon.UPMPackageGenerator.Editor.InputValidationUtility;
+using FieldValidityState = Varneon.UPMPackageGenerator.Editor.InputValidationUtility.FieldValidityState;
 using InputType = Varneon.UPMPackageGenerator.Editor.InputValidationUtility.InputType;
 
 namespace Varneon.UPMPackageGenerator.Editor
@@ -14,6 +16,12 @@ namespace Varneon.UPMPackageGenerator.Editor
         /// </summary>
         [SerializeField]
         private VisualTreeAsset windowUxml;
+
+        /// <summary>
+        /// Field unused icon
+        /// </summary>
+        [SerializeField]
+        private Texture2D iconUnused;
 
         /// <summary>
         /// Field valid icon
@@ -33,9 +41,24 @@ namespace Varneon.UPMPackageGenerator.Editor
         public string PackageName;
 
         /// <summary>
+        /// The display name of the UPM package
+        /// </summary>
+        public string PackageDisplayName;
+
+        public string AuthorName;
+
+        public string AuthorEmail;
+
+        public string AuthorURL;
+
+        /// <summary>
         /// Button for generating the package
         /// </summary>
         private Button generateButton;
+
+        private VisualElement[] validationIcons;
+
+        private bool isPackageInfoValid;
 
         /// <summary>
         /// Documentation URL for naming a UPM package
@@ -56,21 +79,63 @@ namespace Varneon.UPMPackageGenerator.Editor
 
             SerializedObject so = new SerializedObject(this);
 
-            VisualElement packageNameValidationIcon = rootVisualElement.Q("ValidationIcon_PackageName");
-
-            TextField nameField = rootVisualElement.Q<TextField>("TextField_PackageName");
-            nameField.Bind(so);
-            nameField.RegisterValueChangedCallback(a => {
-                bool isValidInput = InputValidationUtility.ValidateInput(InputType.UPMPackageName, a.newValue);
-                SetFieldValidationIconState(packageNameValidationIcon, isValidInput);
-                generateButton.SetEnabled(isValidInput);
+            TextField packageNameField = rootVisualElement.Q<TextField>("TextField_PackageName");
+            packageNameField.Bind(so);
+            packageNameField.RegisterValueChangedCallback(a => {
+                SetFieldValidationIconState(rootVisualElement.Q("ValidationIcon_PackageName"), ValidateInput(InputType.UPMPackageName, a.newValue));
+                UpdateGenerateButtonEnabledState();
                 });
+
+            TextField packageDisplayNameField = rootVisualElement.Q<TextField>("TextField_PackageDisplayName");
+            packageDisplayNameField.Bind(so);
+            packageDisplayNameField.RegisterValueChangedCallback(a => {
+                SetFieldValidationIconState(rootVisualElement.Q("ValidationIcon_PackageDisplayName"), ValidateGenericTextInput(a.newValue));
+                UpdateGenerateButtonEnabledState();
+            });
+
+            TextField authorNameField = rootVisualElement.Q<TextField>("TextField_AuthorName");
+            authorNameField.Bind(so);
+            authorNameField.RegisterValueChangedCallback(a => {
+                SetFieldValidationIconState(rootVisualElement.Q("ValidationIcon_AuthorName"), ValidateGenericTextInput(a.newValue));
+                UpdateGenerateButtonEnabledState();
+            });
+
+            TextField authorEmailField = rootVisualElement.Q<TextField>("TextField_AuthorEmail");
+            authorEmailField.Bind(so);
+            authorEmailField.RegisterValueChangedCallback(a => {
+                SetFieldValidationIconState(rootVisualElement.Q("ValidationIcon_AuthorEmail"), ValidateInput(InputType.Email, a.newValue));
+                UpdateGenerateButtonEnabledState();
+            });
+
+            TextField authorURLField = rootVisualElement.Q<TextField>("TextField_AuthorURL");
+            authorURLField.Bind(so);
+            authorURLField.RegisterValueChangedCallback(a => {
+                SetFieldValidationIconState(rootVisualElement.Q("ValidationIcon_AuthorURL"), ValidateInput(InputType.URL, a.newValue));
+                UpdateGenerateButtonEnabledState();
+            });
 
             (generateButton = rootVisualElement.Q<Button>("Button_Generate")).clicked += () => GeneratePackage();
 
             rootVisualElement.Q<Button>("Button_NamingHelpURL").clicked += () => Application.OpenURL(UPM_PACKAGE_NAMING_DOCUMENTATION_URL);
 
+            validationIcons = rootVisualElement.Query(className: "validationIcon").ToList().ToArray();
+
             generateButton.SetEnabled(false);
+        }
+
+        private void UpdateGenerateButtonEnabledState()
+        {
+            foreach(VisualElement validationIcon in validationIcons)
+            {
+                if(validationIcon.style.backgroundImage == iconInvalid)
+                {
+                    generateButton.SetEnabled(false);
+
+                    return;
+                }
+            }
+
+            generateButton.SetEnabled(true);
         }
 
         /// <summary>
@@ -87,10 +152,14 @@ namespace Varneon.UPMPackageGenerator.Editor
                 Directory.CreateDirectory(packageFolderPath);
             }
 
-            using (StreamWriter writer = new StreamWriter(manifestPath))
-            {
-                writer.Write(string.Join("\n", new string[] { "{", string.Format("\t\"name\": \"{0}\",\"version\": \"0.0.1\"", PackageName), "}" }));
-            }
+            PackageManifestGenerator.GenerateManifest(
+                manifestPath,
+                PackageName,
+                PackageDisplayName,
+                AuthorName,
+                AuthorEmail,
+                AuthorURL
+                );
 
             AssetDatabase.SaveAssets();
 
@@ -101,9 +170,9 @@ namespace Varneon.UPMPackageGenerator.Editor
             Close();
         }
 
-        private void SetFieldValidationIconState(VisualElement element, bool valid)
+        private void SetFieldValidationIconState(VisualElement element, FieldValidityState state)
         {
-            element.style.backgroundImage = valid ? iconValid : iconInvalid;
+            element.style.backgroundImage = state == FieldValidityState.None ? iconUnused : state == FieldValidityState.Valid ? iconValid : iconInvalid;
         }
     }
 }
