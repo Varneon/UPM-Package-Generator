@@ -36,7 +36,7 @@
 }
 
 #Button_NamingHelpURL {
-    color: rgba(82, 143, 204, 255);
+    color: rgb(82, 143, 204);
     -unity-font-style: bold;
     background-color: rgba(0, 0, 0, 0);
     border-left-color: rgba(0, 0, 0, 0);
@@ -55,4 +55,19 @@
 
 #Button_NamingHelpURL:hover {
     color: rgb(102, 178, 255);
+}
+
+.fieldContainer {
+    flex-direction: row;
+    align-items: center;
+}
+
+.validationIcon {
+    width: 16px;
+    height: 16px;
+    background-image: resource('Icons/Validation/Icon_Placeholder');
+    flex-shrink: 0;
+    flex-grow: 1;
+    min-width: 16px;
+    min-height: 16px;
 }

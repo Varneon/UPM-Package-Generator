@@ -1,9 +1,9 @@
 ﻿using System.IO;
-using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using InputType = Varneon.UPMPackageGenerator.Editor.InputValidationUtility.InputType;
 
 namespace Varneon.UPMPackageGenerator.Editor
 {
@@ -13,7 +13,19 @@ namespace Varneon.UPMPackageGenerator.Editor
         /// Root VisualTreeAsset for the window's UI
         /// </summary>
         [SerializeField]
-        private VisualTreeAsset windowUxml = null;
+        private VisualTreeAsset windowUxml;
+
+        /// <summary>
+        /// Field valid icon
+        /// </summary>
+        [SerializeField]
+        private Texture2D iconValid;
+
+        /// <summary>
+        /// Field invalid icon
+        /// </summary>
+        [SerializeField]
+        private Texture2D iconInvalid;
 
         /// <summary>
         /// The name of the UPM package
@@ -44,9 +56,15 @@ namespace Varneon.UPMPackageGenerator.Editor
 
             SerializedObject so = new SerializedObject(this);
 
+            VisualElement packageNameValidationIcon = rootVisualElement.Q("ValidationIcon_PackageName");
+
             TextField nameField = rootVisualElement.Q<TextField>("TextField_PackageName");
             nameField.Bind(so);
-            nameField.RegisterValueChangedCallback(a => generateButton.SetEnabled(Regex.IsMatch(a.newValue, @"^([a-z0-9-_]+\.){2}([a-z0-9-_]+)(\.[a-z0-9-_]+)?$")));
+            nameField.RegisterValueChangedCallback(a => {
+                bool isValidInput = InputValidationUtility.ValidateInput(InputType.UPMPackageName, a.newValue);
+                SetFieldValidationIconState(packageNameValidationIcon, isValidInput);
+                generateButton.SetEnabled(isValidInput);
+                });
 
             (generateButton = rootVisualElement.Q<Button>("Button_Generate")).clicked += () => GeneratePackage();
 
@@ -81,6 +99,11 @@ namespace Varneon.UPMPackageGenerator.Editor
             EditorUtility.RevealInFinder(packageFolderPath);
 
             Close();
+        }
+
+        private void SetFieldValidationIconState(VisualElement element, bool valid)
+        {
+            element.style.backgroundImage = valid ? iconValid : iconInvalid;
         }
     }
 }
