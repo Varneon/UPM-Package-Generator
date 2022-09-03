@@ -1,11 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using System.IO;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEngine;
 using UnityEngine.UIElements;
-using System.Text.RegularExpressions;
-using System.IO;
 
 namespace Varneon.UPMPackageGenerator.Editor
 {
@@ -65,8 +63,6 @@ namespace Varneon.UPMPackageGenerator.Editor
             string packageFolderPath = Path.Combine("Packages", PackageName);
 
             string manifestPath = Path.Combine(packageFolderPath, "package.json");
-
-            string versionPath = Path.Combine(packageFolderPath, "version.txt");
 
             if (!Directory.Exists(packageFolderPath))
             {
