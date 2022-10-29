@@ -1,14 +1,14 @@
 {
-    "name": "com.varneon.upm-package-generator",
-    "version": "0.1.0",
-    "description": "Unity Editor extension for generating UPM packages",
-    "displayName": "UPM Package Generator",
-    "unity": "2019.4",
-    "author": {
-        "name": "Varneon",
-        "url": "https://github.com/Varneon"
-    },
-    "dependencies": {
-        "com.unity.nuget.newtonsoft-json": "3.0.2"
-    }
+  "name": "com.varneon.upm-package-generator",
+  "version": "0.1.1",
+  "description": "Unity Editor extension for generating UPM packages",
+  "displayName": "UPM Package Generator",
+  "unity": "2019.4",
+  "author": {
+    "name": "Varneon",
+    "url": "https://github.com/Varneon"
+  },
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "2.0.2"
+  }
 }
