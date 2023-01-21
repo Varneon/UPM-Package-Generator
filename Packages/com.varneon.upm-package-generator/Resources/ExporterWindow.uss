@@ -38,6 +38,7 @@
 .fieldContainer {
     flex-direction: row;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .validationIcon {
@@ -56,21 +57,35 @@
 }
 
 .unity-foldout {
+    flex-shrink: 0;
+    flex-grow: 1;
+    margin-right: 20px;
 }
 
 .foldoutContainer {
     padding-left: 4px;
-    padding-right: 20px;
+    padding-right: 0;
     padding-top: 4px;
     padding-bottom: 4px;
     align-items: flex-start;
     background-color: rgb(67, 67, 67);
-    border-left-color: rgba(92, 92, 92, 255);
-    border-right-color: rgba(92, 92, 92, 255);
-    border-top-color: rgba(92, 92, 92, 255);
-    border-bottom-color: rgba(92, 92, 92, 255);
+    border-left-color: rgb(92, 92, 92);
+    border-right-color: rgb(92, 92, 92);
+    border-top-color: rgb(92, 92, 92);
+    border-bottom-color: rgb(92, 92, 92);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
+}
+
+.fieldContainer > .unity-text-field {
+    margin-right: 20px;
+}
+
+.unity-text-field {
+    flex-shrink: 0;
+    flex-grow: 1;
+    padding-right: 0;
+    margin-right: 0;
 }

@@ -51,6 +51,10 @@ namespace Varneon.UPMPackageGenerator.Editor
 
         public string AuthorURL;
 
+        public PackageType PackageType;
+
+        private string customPackageDirectory = DEFAULT_PACKAGE_DIRECTORY;
+
         /// <summary>
         /// Button for generating the package
         /// </summary>
@@ -65,11 +69,13 @@ namespace Varneon.UPMPackageGenerator.Editor
         /// </summary>
         private const string UPM_PACKAGE_NAMING_DOCUMENTATION_URL = "https://docs.unity3d.com/Manual/cus-naming.html";
 
+        private const string DEFAULT_PACKAGE_DIRECTORY = "Packages";
+
         [MenuItem("Varneon/UPM Package Generator")]
         public static GeneratorWindow OpenWindow()
         {
             GeneratorWindow window = GetWindow<GeneratorWindow>("UPM Package Generator");
-            window.minSize = new Vector2(384, 192);
+            window.minSize = new Vector2(384, 384);
             return window;
         }
 
@@ -79,11 +85,16 @@ namespace Varneon.UPMPackageGenerator.Editor
 
             SerializedObject so = new SerializedObject(this);
 
+            Label packageDirectoryLabel = rootVisualElement.Q<Label>("Label_PackageDirectory");
+
+            void RefreshPackageDirectoryLabelAction() { packageDirectoryLabel.text = GetPackageDirectory(); }
+
             TextField packageNameField = rootVisualElement.Q<TextField>("TextField_PackageName");
             packageNameField.Bind(so);
             packageNameField.RegisterValueChangedCallback(a => {
                 SetFieldValidationIconState(rootVisualElement.Q("ValidationIcon_PackageName"), ValidateInput(InputType.UPMPackageName, a.newValue));
                 UpdateGenerateButtonEnabledState();
+                RefreshPackageDirectoryLabelAction();
                 });
 
             TextField packageDisplayNameField = rootVisualElement.Q<TextField>("TextField_PackageDisplayName");
@@ -112,6 +123,21 @@ namespace Varneon.UPMPackageGenerator.Editor
             authorURLField.RegisterValueChangedCallback(a => {
                 SetFieldValidationIconState(rootVisualElement.Q("ValidationIcon_AuthorURL"), ValidateInput(InputType.URL, a.newValue));
                 UpdateGenerateButtonEnabledState();
+            });
+
+            Button browseCustomDirectoryButton = rootVisualElement.Q<Button>("Button_BrowseCustomDirectory");
+            browseCustomDirectoryButton.clicked += () => {
+                string newCustomDirectory = EditorUtility.SaveFolderPanel("Choose package directory", "Packages", PackageName);
+                customPackageDirectory = string.IsNullOrWhiteSpace(newCustomDirectory) ? DEFAULT_PACKAGE_DIRECTORY : newCustomDirectory;
+                RefreshPackageDirectoryLabelAction();
+            };
+
+            EnumField packageTypeField = rootVisualElement.Q<EnumField>("EnumField_PackageType");
+            packageTypeField.Bind(so);
+            packageTypeField.RegisterValueChangedCallback(a =>
+            {
+                SetElementVisibleState(browseCustomDirectoryButton, ((PackageType)a.newValue) == PackageType.Local);
+                RefreshPackageDirectoryLabelAction();
             });
 
             (generateButton = rootVisualElement.Q<Button>("Button_Generate")).clicked += () => GeneratePackage();
@@ -143,7 +169,7 @@ namespace Varneon.UPMPackageGenerator.Editor
         /// </summary>
         private void GeneratePackage()
         {
-            string packageFolderPath = Path.Combine("Packages", PackageName);
+            string packageFolderPath = GetPackageDirectory();
 
             string manifestPath = Path.Combine(packageFolderPath, "package.json");
 
@@ -161,6 +187,18 @@ namespace Varneon.UPMPackageGenerator.Editor
                 AuthorURL
                 );
 
+            if(PackageType == PackageType.Local)
+            {
+                try
+                {
+                    UPMUtility.AddLocalPackage(packageFolderPath);
+                }
+                catch
+                {
+                    Debug.LogWarning($"Couldn't add local package ({packageFolderPath}) via UPM! Please add the package manually from Package Manager.");
+                }
+            }
+
             AssetDatabase.SaveAssets();
 
             AssetDatabase.Refresh();
@@ -173,6 +211,23 @@ namespace Varneon.UPMPackageGenerator.Editor
         private void SetFieldValidationIconState(VisualElement element, FieldValidityState state)
         {
             element.style.backgroundImage = state == FieldValidityState.None ? iconUnused : state == FieldValidityState.Valid ? iconValid : iconInvalid;
+        }
+
+        private void SetElementVisibleState(VisualElement element, bool visible)
+        {
+            element.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        private string GetPackageDirectory()
+        {
+            switch (PackageType)
+            {
+                case PackageType.Local:
+                    return Path.Combine(customPackageDirectory, PackageName);
+                case PackageType.Embedded:
+                default:
+                    return Path.Combine(DEFAULT_PACKAGE_DIRECTORY, PackageName);
+            }
         }
     }
 }
