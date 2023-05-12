@@ -35,6 +35,16 @@
     </ui:VisualElement>
     <ui:VisualElement class="defaultMargin foldoutContainer">
         <Style src="ExporterWindow.uss" />
+        <ui:Foldout text="Folders" name="Foldout_Folders" value="false" style="width: 100%;">
+            <ui:TextField picking-mode="Ignore" label="Assembly Name" name="TextField_AssemblyName" binding-path="AssemblyName" style="margin-right: 4px;" />
+            <ui:Toggle label="Editor" name="Toggle_CreateEditorFolder" binding-path="CreateEditorFolder" />
+            <ui:Toggle label="Runtime" name="Toggle_CreateRuntimeFolder" binding-path="CreateRuntimeFolder" />
+            <ui:Toggle label="Editor Tests" name="Toggle_CreateEditorTestsFolder" binding-path="CreateEditorTestsFolder" style="display: none;" />
+            <ui:Toggle label="Runtime Tests" name="Toggle_CreateRuntimeTestsFolder" binding-path="CreateRuntimeTestsFolder" style="display: none;" />
+        </ui:Foldout>
+    </ui:VisualElement>
+    <ui:VisualElement class="defaultMargin foldoutContainer">
+        <Style src="ExporterWindow.uss" />
         <ui:Foldout text="Package Output Directory" name="Foldout_PackageOutputDirectory" value="false" style="width: 100%;">
             <uie:EnumField label="Package Type" name="EnumField_PackageType" binding-path="PackageType" style="flex-grow: 1;" />
             <ui:VisualElement style="margin-left: 3px; margin-right: 3px; margin-top: 3px; margin-bottom: 3px; border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; border-left-color: rgb(48, 48, 48); border-right-color: rgb(48, 48, 48); border-top-color: rgb(48, 48, 48); border-bottom-color: rgb(48, 48, 48); padding-left: 4px; padding-right: 4px; padding-top: 4px; padding-bottom: 4px; border-top-left-radius: 3px; border-bottom-left-radius: 3px; border-top-right-radius: 3px; border-bottom-right-radius: 3px; background-color: rgb(129, 129, 129);">
