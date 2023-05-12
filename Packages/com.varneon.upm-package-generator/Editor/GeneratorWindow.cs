@@ -51,6 +51,12 @@ namespace Varneon.UPMPackageGenerator.Editor
 
         public string AuthorURL;
 
+        public string AssemblyName;
+
+        public bool
+            CreateEditorFolder,
+            CreateRuntimeFolder;
+
         public PackageType PackageType;
 
         private string customPackageDirectory = DEFAULT_PACKAGE_DIRECTORY;
@@ -89,12 +95,19 @@ namespace Varneon.UPMPackageGenerator.Editor
 
             void RefreshPackageDirectoryLabelAction() { packageDirectoryLabel.text = GetPackageDirectory(); }
 
+            TextField assemblyNameField = rootVisualElement.Q<TextField>("TextField_AssemblyName");
+            assemblyNameField.Bind(so);
+
+            rootVisualElement.Q<Toggle>("Toggle_CreateEditorFolder").Bind(so);
+            rootVisualElement.Q<Toggle>("Toggle_CreateRuntimeFolder").Bind(so);
+
             TextField packageNameField = rootVisualElement.Q<TextField>("TextField_PackageName");
             packageNameField.Bind(so);
             packageNameField.RegisterValueChangedCallback(a => {
                 SetFieldValidationIconState(rootVisualElement.Q("ValidationIcon_PackageName"), ValidateInput(InputType.UPMPackageName, a.newValue));
                 UpdateGenerateButtonEnabledState();
                 RefreshPackageDirectoryLabelAction();
+                RefreshAssemblyNameField();
                 });
 
             TextField packageDisplayNameField = rootVisualElement.Q<TextField>("TextField_PackageDisplayName");
@@ -102,6 +115,7 @@ namespace Varneon.UPMPackageGenerator.Editor
             packageDisplayNameField.RegisterValueChangedCallback(a => {
                 SetFieldValidationIconState(rootVisualElement.Q("ValidationIcon_PackageDisplayName"), ValidateGenericTextInput(a.newValue));
                 UpdateGenerateButtonEnabledState();
+                RefreshAssemblyNameField();
             });
 
             TextField authorNameField = rootVisualElement.Q<TextField>("TextField_AuthorName");
@@ -109,6 +123,7 @@ namespace Varneon.UPMPackageGenerator.Editor
             authorNameField.RegisterValueChangedCallback(a => {
                 SetFieldValidationIconState(rootVisualElement.Q("ValidationIcon_AuthorName"), ValidateGenericTextInput(a.newValue));
                 UpdateGenerateButtonEnabledState();
+                RefreshAssemblyNameField();
             });
 
             TextField authorEmailField = rootVisualElement.Q<TextField>("TextField_AuthorEmail");
@@ -124,6 +139,15 @@ namespace Varneon.UPMPackageGenerator.Editor
                 SetFieldValidationIconState(rootVisualElement.Q("ValidationIcon_AuthorURL"), ValidateInput(InputType.URL, a.newValue));
                 UpdateGenerateButtonEnabledState();
             });
+
+            void RefreshAssemblyNameField()
+            {
+                bool validAuthor = !string.IsNullOrWhiteSpace(AuthorName);
+
+                bool validPackageName = !string.IsNullOrWhiteSpace(PackageDisplayName);
+
+                assemblyNameField.value = validAuthor && validPackageName ? string.Join(".", AuthorName.Replace('-', '.').Replace(" ", string.Empty), PackageDisplayName.Replace('-', '.').Replace(" ", string.Empty)) : PackageName;
+            }
 
             Button browseCustomDirectoryButton = rootVisualElement.Q<Button>("Button_BrowseCustomDirectory");
             browseCustomDirectoryButton.clicked += () => {
@@ -201,11 +225,29 @@ namespace Varneon.UPMPackageGenerator.Editor
 
             AssetDatabase.SaveAssets();
 
+            GenerateAssemblyDefinitions(packageFolderPath);
+
             AssetDatabase.Refresh();
 
             EditorUtility.RevealInFinder(packageFolderPath);
 
             Close();
+        }
+
+        private void GenerateAssemblyDefinitions(string directory)
+        {
+            string runtimeName = AssemblyName + ".Runtime";
+            string editorName = AssemblyName + ".Editor";
+
+            if (CreateRuntimeFolder)
+            {
+                AssemblyDefinitionGenerator.CreateAssemblyDefinition(Path.Combine(directory, "Runtime", runtimeName + ".asmdef"), runtimeName, false);
+            }
+
+            if (CreateEditorFolder)
+            {
+                AssemblyDefinitionGenerator.CreateAssemblyDefinition(Path.Combine(directory, "Editor", editorName + ".asmdef"), editorName, true, CreateRuntimeFolder ? runtimeName : null);
+            }
         }
 
         private void SetFieldValidationIconState(VisualElement element, FieldValidityState state)
