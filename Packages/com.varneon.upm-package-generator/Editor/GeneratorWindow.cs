@@ -38,7 +38,7 @@ namespace Varneon.UPMPackageGenerator.Editor
         /// <summary>
         /// The name of the UPM package
         /// </summary>
-        public string PackageName;
+        public string PackageName = string.Empty;
 
         /// <summary>
         /// The display name of the UPM package
