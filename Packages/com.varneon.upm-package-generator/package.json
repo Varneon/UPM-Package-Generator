@@ -1,6 +1,6 @@
 {
   "name": "com.varneon.upm-package-generator",
-  "version": "0.1.2-beta.1",
+  "version": "0.1.2-beta.2",
   "description": "Unity Editor extension for generating UPM packages",
   "displayName": "UPM Package Generator",
   "unity": "2019.4",
