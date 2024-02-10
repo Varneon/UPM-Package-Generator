@@ -12,7 +12,7 @@ Generator for easily creating new UPM packages for Unity
 
 * **Automatic package folder and manifest generation:** _UPM Package Generator automatically generates the required manifest file and makes it appear in Unity Package Manager_
 
-![WindowPreview](https://user-images.githubusercontent.com/26690821/188268887-26f0468e-a670-4bda-9fcb-eb67f87849e8.png)
+![WindowPreview](https://github.com/Varneon/UPM-Package-Generator/assets/26690821/0eeb6df1-c0cd-420f-a020-ab1a47fe4825)
 
 ## How to use
 
