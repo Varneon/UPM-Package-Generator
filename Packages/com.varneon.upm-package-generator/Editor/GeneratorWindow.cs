@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -36,7 +37,7 @@ namespace Varneon.UPMPackageGenerator.Editor
         private Texture2D iconInvalid;
 
         /// <summary>
-        /// The name of the UPM package
+        /// The name of the UPM package, e.g. com.varneon.upm-package-generator
         /// </summary>
         public string PackageName = string.Empty;
 
@@ -55,7 +56,8 @@ namespace Varneon.UPMPackageGenerator.Editor
 
         public bool
             CreateEditorFolder,
-            CreateRuntimeFolder;
+            CreateRuntimeFolder,
+            ExposeRuntimeInternalsToEditor;
 
         public PackageType PackageType;
 
@@ -74,6 +76,11 @@ namespace Varneon.UPMPackageGenerator.Editor
         /// Documentation URL for naming a UPM package
         /// </summary>
         private const string UPM_PACKAGE_NAMING_DOCUMENTATION_URL = "https://docs.unity3d.com/Manual/cus-naming.html";
+
+        /// <summary>
+        /// Documentation URL for naming an assembly definition
+        /// </summary>
+        private const string ASSEMBLY_DEFINITION_NAMEING_DOCUMENTATION_URL = "https://docs.unity3d.com/2022.3/Documentation/Manual/class-AssemblyDefinitionImporter.html#name";
 
         private const string DEFAULT_PACKAGE_DIRECTORY = "Packages";
 
@@ -98,8 +105,17 @@ namespace Varneon.UPMPackageGenerator.Editor
             TextField assemblyNameField = rootVisualElement.Q<TextField>("TextField_AssemblyName");
             assemblyNameField.Bind(so);
 
-            rootVisualElement.Q<Toggle>("Toggle_CreateEditorFolder").Bind(so);
-            rootVisualElement.Q<Toggle>("Toggle_CreateRuntimeFolder").Bind(so);
+            Toggle editorFolderToggle = rootVisualElement.Q<Toggle>("Toggle_CreateEditorFolder");
+            editorFolderToggle.Bind(so);
+            Toggle runtimeFolderToggle = rootVisualElement.Q<Toggle>("Toggle_CreateRuntimeFolder");
+            runtimeFolderToggle.Bind(so);
+            Toggle exposeRuntimeInternalsToEditorToggle = rootVisualElement.Q<Toggle>("Toggle_ExposeRuntimeInternalsToEditor");
+            exposeRuntimeInternalsToEditorToggle.Bind(so);
+
+            editorFolderToggle.RegisterValueChangedCallback((a) => ValidateCanExposeRuntimeInternalsToEditor());
+            runtimeFolderToggle.RegisterValueChangedCallback((a) => ValidateCanExposeRuntimeInternalsToEditor());
+
+            void ValidateCanExposeRuntimeInternalsToEditor() { SetElementVisibleState(exposeRuntimeInternalsToEditorToggle, CreateEditorFolder && CreateRuntimeFolder); }
 
             TextField packageNameField = rootVisualElement.Q<TextField>("TextField_PackageName");
             packageNameField.Bind(so);
@@ -144,9 +160,21 @@ namespace Varneon.UPMPackageGenerator.Editor
             {
                 bool validAuthor = !string.IsNullOrWhiteSpace(AuthorName);
 
-                bool validPackageName = !string.IsNullOrWhiteSpace(PackageDisplayName);
+                bool validDisplayName = !string.IsNullOrWhiteSpace(PackageDisplayName);
 
-                assemblyNameField.value = validAuthor && validPackageName ? string.Join(".", AuthorName.Replace('-', '.').Replace(" ", string.Empty), PackageDisplayName.Replace('-', '.').Replace(" ", string.Empty)) : PackageName;
+                if (validAuthor && validDisplayName)
+                {
+                    // Attempt to construct a formatted assembly name, e.g. "Varneon.UPMPackageGenerator" using the author's name and package display name instead of "com.varneon.upm-package-manager"
+                    string assemblyName = string.Join(".", AuthorName.Replace('-', '.').Replace(" ", string.Empty), PackageDisplayName.Replace('-', '.').Replace(" ", string.Empty));
+
+                    // Filter out anything that is not alphanumeric or period
+                    assemblyNameField.value = new string(assemblyName.Where(c => char.IsLetterOrDigit(c) || c == '.').ToArray());
+                }
+                else
+                {
+                    // If both the author's name and package display name haven't been provided yet, we can't make assumptions about the final assembly name so pass the package name instead
+                    assemblyNameField.value = PackageName;
+                }
             }
 
             Button browseCustomDirectoryButton = rootVisualElement.Q<Button>("Button_BrowseCustomDirectory");
@@ -167,6 +195,8 @@ namespace Varneon.UPMPackageGenerator.Editor
             (generateButton = rootVisualElement.Q<Button>("Button_Generate")).clicked += () => GeneratePackage();
 
             rootVisualElement.Q<Button>("Button_NamingHelpURL").clicked += () => Application.OpenURL(UPM_PACKAGE_NAMING_DOCUMENTATION_URL);
+
+            rootVisualElement.Q<Button>("Button_NamingHelpAssembly").clicked += () => Application.OpenURL(ASSEMBLY_DEFINITION_NAMEING_DOCUMENTATION_URL);
 
             validationIcons = rootVisualElement.Query(className: "validationIcon").ToList().ToArray();
 
@@ -247,6 +277,11 @@ namespace Varneon.UPMPackageGenerator.Editor
             if (CreateEditorFolder)
             {
                 AssemblyDefinitionGenerator.CreateAssemblyDefinition(Path.Combine(directory, "Editor", editorName + ".asmdef"), editorName, true, CreateRuntimeFolder ? runtimeName : null);
+            }
+
+            if (ExposeRuntimeInternalsToEditor)
+            {
+                AssemblyDefinitionGenerator.CreateAssemblyInfo(Path.Combine(directory, "Runtime", "AssemblyInfo.cs"), editorName);
             }
         }
 
