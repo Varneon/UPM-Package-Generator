@@ -1,12 +1,13 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.IO;
-using UnityEngine;
 
 namespace Varneon.UPMPackageGenerator.Editor
 {
     public static class AssemblyDefinitionGenerator
     {
+        private const string ASSEMBLY_INFO_TEMPLATE = "using System.Runtime.CompilerServices;\r\n\r\n[assembly: InternalsVisibleTo(\"{0}\")]\r\n";
+
         public static void CreateAssemblyDefinition(string path, string name, bool editorOnly, params string[] references)
         {
             JObject asmdef = new JObject(
@@ -35,6 +36,11 @@ namespace Varneon.UPMPackageGenerator.Editor
             {
                 writer.Write(JsonConvert.SerializeObject(asmdef, Formatting.Indented));
             }
+        }
+
+        public static void CreateAssemblyInfo(string path, string editorAssembly)
+        {
+            File.WriteAllText(path, string.Format(ASSEMBLY_INFO_TEMPLATE, editorAssembly));
         }
     }
 }
