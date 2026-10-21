@@ -11,7 +11,7 @@ namespace Varneon.UPMPackageGenerator.Editor
             // Generate the base properties of the manifest
             JObject manifest = new JObject(
                 new JProperty("name", name),
-                new JProperty("version", "0.0.1"),
+                new JProperty("version", "0.1.0"),
                 new JProperty("description", string.Empty),
                 new JProperty("displayName", displayName)
                 );
